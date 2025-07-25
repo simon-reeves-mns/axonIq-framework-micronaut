@@ -123,26 +123,15 @@ class FlightAggregateOption3: DeciderAggregate2<FlightState, FlightCommand, Flig
     @Inject
     private lateinit var deadlineManager: DeadlineManager
 
-    @Inject
-    private lateinit var commandGateway: SumTypeCommandDispatcher
+//    @Inject
+//    private lateinit var commandGateway: SumTypeCommandDispatcher
 
-    private var logger = LoggerFactory.getLogger(FlightAggregateOption3::class.java)
-
-    private val random = java.util.Random()
 
 
     @CommandHandler
     @CreationPolicy(AggregateCreationPolicy.CREATE_IF_MISSING)
     override fun handle(command: FlightCommand): String {
-
-        if ( command is FlightCommand.ScheduleFlightCommand) {
-            logger.info("Schedule flight command received: $command")
-            if ( random.nextBoolean() ) {
-                // cancel flights at random
-                scheduleFlightCancellation(command.flightId)
-            }
-        }
-
+        scheduleFlightCancellation(command.flightId)
         return processCommand(command)
     }
 
@@ -151,7 +140,7 @@ class FlightAggregateOption3: DeciderAggregate2<FlightState, FlightCommand, Flig
             Duration.ofSeconds(5),
             randomCancelFlightDeadline,
             DeadlinePayload(flightId, "hello world!"))
-        logger.info("scheduleMyDeadline: $deadlineId")
+
         return deadlineId
     }
 
@@ -162,10 +151,10 @@ class FlightAggregateOption3: DeciderAggregate2<FlightState, FlightCommand, Flig
 
     @DeadlineHandler(deadlineName = randomCancelFlightDeadline)
     fun handleDeadline(deadlinePayload: DeadlinePayload) {
-        logger.info("Flight cancellation Deadline triggered, payload received: $deadlinePayload")
+        println("deadline handler")
 
-        commandGateway.sendCommandAsSumType(FlightCommand.CancelFlightCommand(deadlinePayload.flightId,"my evil plan"),
-            FlightCommand::class.java)
+//        commandGateway.sendCommandAsSumType(FlightCommand.CancelFlightCommand(deadlinePayload.flightId,"my evil plan"),
+//            FlightCommand::class.java)
 
     }
 
