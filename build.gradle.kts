@@ -10,6 +10,12 @@ plugins {
     id("io.gatling.gradle") version "3.14.3"
 }
 
+kotlin {
+    jvmToolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
+
 version = "0.1"
 group = "com.playground"
 
@@ -63,6 +69,7 @@ application {
 java {
     sourceCompatibility = JavaVersion.toVersion("21")
 }
+
 
 
 graalvmNative.toolchainDetection = false

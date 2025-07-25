@@ -3,13 +3,20 @@ package com.playground.aggregate
 import com.playground.FlightCommand
 import com.playground.FlightEvent
 import com.playground.FlightState
+import com.playground.SumTypeCommandDispatcher
+import jakarta.inject.Inject
 import org.axonframework.commandhandling.CommandHandler
+import org.axonframework.commandhandling.gateway.CommandGateway
+import org.axonframework.deadline.DeadlineManager
+import org.axonframework.deadline.annotation.DeadlineHandler
 import org.axonframework.eventhandling.EventHandler
 import org.axonframework.eventsourcing.EventSourcingHandler
 import org.axonframework.modelling.command.AggregateCreationPolicy
 import org.axonframework.modelling.command.AggregateIdentifier
 import org.axonframework.modelling.command.AggregateLifecycle
 import org.axonframework.modelling.command.CreationPolicy
+import org.slf4j.LoggerFactory
+import java.time.Duration
 
 class FlightDecider2 : Decider<FlightState, FlightCommand, FlightEvent> {
     override fun decide(state: FlightState, command: FlightCommand): List<FlightEvent> {
@@ -108,17 +115,62 @@ abstract class DeciderAggregate2<TState, TCommand, TEvent, TSelf : DeciderAggreg
     }
 }
 
-class FlightAggregateOption3 : DeciderAggregate2<FlightState, FlightCommand, FlightEvent, FlightAggregateOption3>() {
+const val randomCancelFlightDeadline: String = "randomCancelFlightDeadline"
+
+class FlightAggregateOption3: DeciderAggregate2<FlightState, FlightCommand, FlightEvent, FlightAggregateOption3> (){
     override val decider: Decider<FlightState, FlightCommand, FlightEvent> = FlightDecider2()
+
+    @Inject
+    private lateinit var deadlineManager: DeadlineManager
+
+    @Inject
+    private lateinit var commandGateway: SumTypeCommandDispatcher
+
+    private var logger = LoggerFactory.getLogger(FlightAggregateOption3::class.java)
+
+    private val random = java.util.Random()
+
 
     @CommandHandler
     @CreationPolicy(AggregateCreationPolicy.CREATE_IF_MISSING)
     override fun handle(command: FlightCommand): String {
+
+        if ( command is FlightCommand.ScheduleFlightCommand) {
+            logger.info("Schedule flight command received: $command")
+            if ( random.nextBoolean() ) {
+                // cancel flights at random
+                scheduleFlightCancellation(command.flightId)
+            }
+        }
+
         return processCommand(command)
+    }
+
+    fun scheduleFlightCancellation(flightId:String) : String{
+        val deadlineId = deadlineManager.schedule(
+            Duration.ofSeconds(5),
+            randomCancelFlightDeadline,
+            DeadlinePayload(flightId, "hello world!"))
+        logger.info("scheduleMyDeadline: $deadlineId")
+        return deadlineId
     }
 
     @EventSourcingHandler
     override fun on(event: FlightEvent) {
         handleEvent(event)
     }
+
+    @DeadlineHandler(deadlineName = randomCancelFlightDeadline)
+    fun handleDeadline(deadlinePayload: DeadlinePayload) {
+        logger.info("Flight cancellation Deadline triggered, payload received: $deadlinePayload")
+
+        commandGateway.sendCommandAsSumType(FlightCommand.CancelFlightCommand(deadlinePayload.flightId,"my evil plan"),
+            FlightCommand::class.java)
+
+    }
+
+    data class DeadlinePayload(
+        val flightId: String,
+        val message: String
+    )
 }

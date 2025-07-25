@@ -20,6 +20,7 @@ import org.axonframework.common.transaction.TransactionManager
 import org.axonframework.config.Configuration
 import org.axonframework.config.Configurer
 import org.axonframework.config.DefaultConfigurer
+import org.axonframework.deadline.DeadlineManager
 import org.axonframework.eventhandling.tokenstore.TokenStore
 import org.axonframework.eventhandling.tokenstore.jdbc.JdbcTokenStore
 import org.axonframework.eventhandling.tokenstore.jdbc.PostgresTokenTableFactory
@@ -38,6 +39,7 @@ import org.axonframework.serialization.Serializer
 import org.axonframework.serialization.json.JacksonSerializer
 import org.axonframework.tracing.SpanFactory
 import org.axonframework.tracing.opentelemetry.OpenTelemetrySpanFactory
+import org.slf4j.LoggerFactory
 
 @Factory
 class AxonFactory() {
@@ -176,6 +178,11 @@ class AxonFactory() {
         override fun onApplicationEvent(event: ServerStartupEvent?) {
             config.start()
         }
+    }
+
+    @Singleton
+    fun deadlineManager(config: Configuration): DeadlineManager {
+        return config.deadlineManager()
     }
 
 }
