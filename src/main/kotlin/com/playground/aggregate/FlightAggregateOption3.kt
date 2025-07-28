@@ -123,10 +123,13 @@ class FlightAggregateOption3: DeciderAggregate2<FlightState, FlightCommand, Flig
     @Inject
     private lateinit var deadlineManager: DeadlineManager
 
-//    @Inject
-//    private lateinit var commandGateway: SumTypeCommandDispatcher
+    @Inject
+    private lateinit var commandGateway: SumTypeCommandDispatcher
 
 
+    init {
+        println("FlightAggregateOption3 initialized")
+    }
 
     @CommandHandler
     @CreationPolicy(AggregateCreationPolicy.CREATE_IF_MISSING)
@@ -137,7 +140,7 @@ class FlightAggregateOption3: DeciderAggregate2<FlightState, FlightCommand, Flig
 
     fun scheduleFlightCancellation(flightId:String) : String{
         val deadlineId = deadlineManager.schedule(
-            Duration.ofSeconds(5),
+            Duration.ofSeconds(15),
             randomCancelFlightDeadline,
             DeadlinePayload(flightId, "hello world!"))
 
@@ -153,8 +156,8 @@ class FlightAggregateOption3: DeciderAggregate2<FlightState, FlightCommand, Flig
     fun handleDeadline(deadlinePayload: DeadlinePayload) {
         println("deadline handler")
 
-//        commandGateway.sendCommandAsSumType(FlightCommand.CancelFlightCommand(deadlinePayload.flightId,"my evil plan"),
-//            FlightCommand::class.java)
+        commandGateway.sendCommandAsSumType(FlightCommand.CancelFlightCommand(deadlinePayload.flightId,"my evil plan"),
+            FlightCommand::class.java)
 
     }
 
