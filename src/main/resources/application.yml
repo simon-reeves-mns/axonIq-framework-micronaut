@@ -32,3 +32,16 @@ otel:
     otlp:
       endpoint: http://localhost:4317           # default value
       compression: gzip                         # default value
+
+
+jobrunr:
+  health:
+    enabled: true
+  job-scheduler:
+    enabled: true
+  background-job-server:
+    enabled: true
+  dashboard:
+    enabled: true
+  database:
+    type: postgresql

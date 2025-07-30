@@ -61,6 +61,13 @@ dependencies {
     testImplementation("org.testcontainers:postgresql")
     testImplementation("org.awaitility:awaitility-kotlin:4.2.0")
 
+    val jobrunr = object {
+        val version = "7.5.3"
+    }
+    implementation("org.jobrunr:jobrunr:${jobrunr.version}")
+    annotationProcessor("org.jobrunr:jobrunr-micronaut-annotations:${jobrunr.version}")
+    implementation("org.jobrunr:jobrunr-micronaut-feature:${jobrunr.version}")
+
 }
 
 application {

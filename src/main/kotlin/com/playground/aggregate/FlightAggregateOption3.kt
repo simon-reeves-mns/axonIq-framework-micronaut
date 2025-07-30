@@ -6,7 +6,6 @@ import com.playground.FlightState
 import com.playground.SumTypeCommandDispatcher
 import jakarta.inject.Inject
 import org.axonframework.commandhandling.CommandHandler
-import org.axonframework.commandhandling.gateway.CommandGateway
 import org.axonframework.deadline.DeadlineManager
 import org.axonframework.deadline.annotation.DeadlineHandler
 import org.axonframework.eventhandling.EventHandler
@@ -15,7 +14,6 @@ import org.axonframework.modelling.command.AggregateCreationPolicy
 import org.axonframework.modelling.command.AggregateIdentifier
 import org.axonframework.modelling.command.AggregateLifecycle
 import org.axonframework.modelling.command.CreationPolicy
-import org.slf4j.LoggerFactory
 import java.time.Duration
 
 class FlightDecider2 : Decider<FlightState, FlightCommand, FlightEvent> {
@@ -134,13 +132,16 @@ class FlightAggregateOption3: DeciderAggregate2<FlightState, FlightCommand, Flig
     @CommandHandler
     @CreationPolicy(AggregateCreationPolicy.CREATE_IF_MISSING)
     override fun handle(command: FlightCommand): String {
-        scheduleFlightCancellation(command.flightId)
+        if ( command is FlightCommand.ScheduleFlightCommand) {
+            scheduleFlightCancellation(command.flightId)
+        }
+
         return processCommand(command)
     }
 
     fun scheduleFlightCancellation(flightId:String) : String{
         val deadlineId = deadlineManager.schedule(
-            Duration.ofSeconds(15),
+            Duration.ofSeconds(30),
             randomCancelFlightDeadline,
             DeadlinePayload(flightId, "hello world!"))
 
